@@ -29,7 +29,7 @@ The workflow consists of three main stages:
 *(Please replace the placeholders below with your generated speckle images and heatmap matrix)*
 
 *Figure 1: Reference vs. Deformed Speckle Images*
-  ![Speckle Images](placeholder_link_for_speckle_images)
+![Speckle Images](placeholder_link_for_speckle_images)
 
 *Figure 2: Full-field Displacement and Strain Cloud Maps*
 ![Cloud Map](placeholder_link_for_cloud_map)
