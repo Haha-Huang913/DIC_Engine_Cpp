@@ -1,0 +1,18 @@
+# 忽略 CMake 建造的工厂区
+build/
+.vs/
+out/
+
+# 忽略所有编译出来的可执行文件和库
+*.exe
+*.dll
+*.lib
+
+# 忽略跑出来的测试图片和数据
+*.csv
+*.tif
+*.jpg
+*.png
+
+# 忽略 Python 产生的缓存
+__pycache__/
