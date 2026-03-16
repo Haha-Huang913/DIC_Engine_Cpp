@@ -26,6 +26,9 @@ vector <double> ICGNSolver::solver(const DICImage& refImg, const DICImage& defIm
 	p[3] = init_v;
 
 	DICSubset ref_subset(subsetcx, subsetcy, subsetsize,refImg);	//先创建参考图像子集
+	double mean_ref = ref_subset.getmean();			//获取参考图像子集统计量
+	double stddev_ref = ref_subset.getstddev();
+	if (stddev_ref < 1e-5) stddev_ref = 1e-5;
 
 	Mat hessian = Mat::zeros(6, 6, CV_64F);		//往下计算参考图像子集的黑塞矩阵以及每个像素的最速下降梯度
 	Mat gradient = Mat::zeros(6, 1, CV_64F);
@@ -66,12 +69,12 @@ vector <double> ICGNSolver::solver(const DICImage& refImg, const DICImage& defIm
 			jacobian_Y[4] = dx;
 			jacobian_Y[5] = dy;
 
-			sd_ref_subset[pixel_serialNumber][0] = -(gx_ref_subset * jacobian_X[0] + gy_ref_subset * jacobian_Y[0]) / ref_subset.getstddev();	// sd = ([gx_ref,gy_ref] * J ) / standarddeviation_ref
-			sd_ref_subset[pixel_serialNumber][1] = -(gx_ref_subset * jacobian_X[1] + gy_ref_subset * jacobian_Y[1]) / ref_subset.getstddev();
-			sd_ref_subset[pixel_serialNumber][2] = -(gx_ref_subset * jacobian_X[2] + gy_ref_subset * jacobian_Y[2]) / ref_subset.getstddev();
-			sd_ref_subset[pixel_serialNumber][3] = -(gx_ref_subset * jacobian_X[3] + gy_ref_subset * jacobian_Y[3]) / ref_subset.getstddev();
-			sd_ref_subset[pixel_serialNumber][4] = -(gx_ref_subset * jacobian_X[4] + gy_ref_subset * jacobian_Y[4]) / ref_subset.getstddev();
-			sd_ref_subset[pixel_serialNumber][5] = -(gx_ref_subset * jacobian_X[5] + gy_ref_subset * jacobian_Y[5]) / ref_subset.getstddev();
+			sd_ref_subset[pixel_serialNumber][0] = -(gx_ref_subset * jacobian_X[0] + gy_ref_subset * jacobian_Y[0]) / stddev_ref;	// sd = ([gx_ref,gy_ref] * J ) / standarddeviation_ref
+			sd_ref_subset[pixel_serialNumber][1] = -(gx_ref_subset * jacobian_X[1] + gy_ref_subset * jacobian_Y[1]) / stddev_ref;
+			sd_ref_subset[pixel_serialNumber][2] = -(gx_ref_subset * jacobian_X[2] + gy_ref_subset * jacobian_Y[2]) / stddev_ref;
+			sd_ref_subset[pixel_serialNumber][3] = -(gx_ref_subset * jacobian_X[3] + gy_ref_subset * jacobian_Y[3]) / stddev_ref;
+			sd_ref_subset[pixel_serialNumber][4] = -(gx_ref_subset * jacobian_X[4] + gy_ref_subset * jacobian_Y[4]) / stddev_ref;
+			sd_ref_subset[pixel_serialNumber][5] = -(gx_ref_subset * jacobian_X[5] + gy_ref_subset * jacobian_Y[5]) / stddev_ref;
 			
 			for (int i = 0; i < 6; i++)
 			{
@@ -91,7 +94,7 @@ vector <double> ICGNSolver::solver(const DICImage& refImg, const DICImage& defIm
 
 		//先计算该次迭代中参考子集经过形变参数映射后得到的变形子集的统计量，每次迭代完清零
 		int pixelcount = 0;
-		long double mean_def = 0.0, standarddeviation_def = 0.0, totalpixel = 0.0, totalpixel_squared = 0.0;
+		long double mean_def = 0.0, stddev_def = 0.0, totalpixel = 0.0, totalpixel_squared = 0.0;
 		gradient.setTo(0);	
 		pixel_serialNumber = 0;
 
@@ -118,10 +121,10 @@ vector <double> ICGNSolver::solver(const DICImage& refImg, const DICImage& defIm
 		pixel_serialNumber = 0;	
 
 		mean_def = totalpixel / pixelcount;
-		double variance_def = (totalpixel_squared / pixelcount) - (mean_def * mean_def);
+		double variance_def = totalpixel_squared  - (mean_def * mean_def) * pixelcount;
 		variance_def = max(0.0, variance_def);    //防止负数
-		standarddeviation_def = sqrt(variance_def);
-		if (standarddeviation_def < 1e-5) standarddeviation_def = 1e-5;
+		stddev_def = sqrt(variance_def);
+		if (stddev_def < 1e-5) stddev_def = 1e-5;
 
 		for (int y = startY; y <= endY; y++)
 		{
@@ -133,7 +136,7 @@ vector <double> ICGNSolver::solver(const DICImage& refImg, const DICImage& defIm
 				
 				double pxile_def = def_pixels_subset[pixel_serialNumber];
 				double pxile_ref = ref_subset.getlocalPixel(x - startX, y - startY);	//局部坐标
-				double error = ((pxile_ref - ref_subset.getmean()) / ref_subset.getstddev()) - ((pxile_def - mean_def) / standarddeviation_def);
+				double error = ((pxile_ref - mean_ref) / stddev_ref) - ((pxile_def - mean_def) / stddev_def);
 
 				for (int i = 0; i < 6; i++)
 				{

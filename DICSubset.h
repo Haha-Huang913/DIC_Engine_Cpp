@@ -11,11 +11,10 @@ private:
 	int size;	//ÆæÊý
 
 	cv::Mat subset;
+	cv::Mat image;
 
 	double mean;
 	double stddev;
-
-	void computeStatistics();
 
 public:
 	DICSubset(int cx, int cy, int subsetsize,const DICImage& img );

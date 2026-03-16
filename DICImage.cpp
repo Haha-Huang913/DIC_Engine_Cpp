@@ -13,7 +13,8 @@ DICImage::DICImage(const std::string& path) {
 
 	tempImage.convertTo(image, CV_64F);     //自动转化为双浮点精度
 
-	computeGradients(); //创建完图像后即刻计算梯度
+	computeGradients(); //创建完图像后即刻计算梯度和积分图
+    computeIntegral();
 }
 
 void DICImage::computeGradients() {
@@ -28,6 +29,10 @@ void DICImage::computeGradients() {
             gradY.at<double>(y, x) = (image.at<double>(y + 1, x) - image.at<double>(y - 1, x)) / 2.0;
         }
     }
+}
+
+void DICImage::computeIntegral() {
+    cv::integral(image, integralSum, integralSquare, CV_64F);
 }
 
 int DICImage::getWidth() const {
@@ -112,6 +117,34 @@ double DICImage::getGradY(double x, double y) const {
 
     return (1 - dx) * (1 - dy) * f11 + (1 - dx) * dy * f12 + dx * (1 - dy) * f21 + dx * dy * f22;
 }
+
+vector<double> DICImage::getStatistics(int cx, int cy, int size) const {
+    int half = size / 2;
+    int x1 = cx - half;
+    int y1 = cy - half;
+    int x2 = cx + half + 1;
+    int y2 = cy + half + 1;
+
+    double sum
+        = integralSum.at<double>(y2, x2)
+        - integralSum.at<double>(y1, x2)
+        - integralSum.at<double>(y2, x1)
+        + integralSum.at<double>(y1, x1);
+    double mean = sum / (size * size);
+
+    double sumSq
+        = integralSquare.at<double>(y2, x2)
+        - integralSquare.at<double>(y1, x2)
+        - integralSquare.at<double>(y2, x1)
+        + integralSquare.at<double>(y1, x1);
+    double variance = sumSq - (mean * mean) * (size * size);   
+    if (variance < 0.0) variance = 0.0;
+    double stddev = std::sqrt(variance);
+
+    return { mean,stddev };
+   
+}
+
 
 const cv::Mat& DICImage::getImage() const {
     return image;

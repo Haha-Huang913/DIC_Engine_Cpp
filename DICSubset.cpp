@@ -20,29 +20,11 @@ DICSubset::DICSubset(int cx, int cy, int subsetsize, const DICImage& img) {
 	}
 
 	subset = img.getImage()(cv::Rect(startX, startY, size, size)).clone();  //由此，subset对象只认识相对坐标，包括最后一个取相对坐标像素也是如此
-	
-	computeStatistics();
-
+	std::vector<double> stats = img.getStatistics(cx, cy, size);
+	mean = stats[0];
+	stddev = stats[1];
 }
 
-void DICSubset::computeStatistics() {
-	double totalpixels = 0;
-	double pixelCount = 0;
-	double pixel_Square = 0;
-	double variance = 0;
-	for (int j = 0; j < size; j++) {
-		for (int i = 0; i < size; i++) {
-			totalpixels += subset.at<double>(j, i);
-			pixelCount += 1;
-			pixel_Square += subset.at<double>(j, i) * subset.at<double>(j, i);
-		}
-	}
-
-	mean = totalpixels / pixelCount;
-	variance = (pixel_Square / pixelCount) - (mean * mean);
-	variance = max(0.0, variance);
-	stddev = sqrt(variance);
-}
 
 int DICSubset::getcenterX() const {
 	return centerX;
