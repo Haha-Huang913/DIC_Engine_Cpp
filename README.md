@@ -26,7 +26,6 @@ The workflow consists of three main stages:
 3. **Python Controller (`run_pipeline.py`)**: Triggers the C++ executables, displays intermediate visual checkpoints, and renders the final 4D heatmaps (U, V, UX, UY, VX, VY).
 
 ## Visualization & Results
-*(Please replace the placeholders below with your generated speckle images and heatmap matrix)*
 
 *Figure 1: Reference vs. Deformed Speckle Images*
 ![Speckle Images](placeholder_link_for_speckle_images)
